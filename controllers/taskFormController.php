@@ -14,6 +14,12 @@ $task = [];
 // Les données ont elle été postées ?
 $isPosted = filter_has_var(INPUT_POST, "submit");
 
+$id = filter_input(INPUT_GET, "id", FILTER_SANITIZE_NUMBER_INT);
+
+if(! empty($id) && ! $isPosted){
+    $task = getTask($id, $pdo);
+}
+
 if($isPosted){
     //Récupération de la saisie
     $title = filter_input(INPUT_POST, "title", FILTER_SANITIZE_STRING);
@@ -36,10 +42,23 @@ if($isPosted){
     $errors = validateTask($task);
 
     if(count($errors) == 0){
-        insertTask($task, $pdo);
+        if(empty($id)){
+            insertTask($task, $pdo);
+        } else {
+            $task["id"] = $id;
+
+            if($task["status"] == 2 ){
+                $task["completion"] = 100;
+            } else if($task["completion"] = 100){
+                $task["status"] = 2;
+            }
+
+            updateTask($task, $pdo);
+        }
+        
         //redirection vers la liste des tâches
         header("location:/?route=taskList");
-    };
+    }
 }
 
 /***********************************
@@ -49,6 +68,6 @@ $categoryList = getAllCategories($pdo);
 $statusList = getAllstatuses($pdo);
 
 $pageTitle = "Nouvelle tâche";
-$content = "newTask";
+$content = "taskForm";
 
 require "../views/baseLayout.php";
